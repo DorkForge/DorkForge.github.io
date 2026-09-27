@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5" />
+<meta name="theme-color" content="#0d8ba0" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)" />
+<meta name="description" content="DorkForge — a mobile-first Google dork builder with GHDB presets for authorized security testing and attack-surface review." />
+<meta name="color-scheme" content="light dark" />
+<title>DorkForge — dork builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#eef2f8; --bg2:#e6ecf5; --surface:#ffffff; --surface2:#f6f9fd; --inset:#f2f6fb;
+    --edge:#dde5f0; --edge2:#c6d2e2;
+    --ink:#16233c; --muted:#5b6b86; --faint:#93a1bb;
+    --signal:#0d8ba0; --signal-strong:#0a9fb8; --signal-soft:#e1f4f7; --signal-ring:rgba(13,139,160,.15);
+    --caution:#b06a12; --caution-soft:#fbf1e0; --caution-edge:#ecd9b8;
+    --danger:#cf3b3b; --danger-soft:#fbe6e6; --value:#0f7a45;
+    --tok-neg:#c0492e; --tok-str:#7b53c6;
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --sh-sm:0 1px 2px rgba(18,32,58,.06);
+    --sh-md:0 6px 22px rgba(18,32,58,.09);
+    --sh-top:0 -4px 18px rgba(18,32,58,.06);
+    --sh-head:0 3px 16px rgba(18,32,58,.06);
+    --sh-lg:0 12px 42px rgba(18,32,58,.16);
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#0b1220; --bg2:#0e1626; --surface:#141d30; --surface2:#1a2438; --inset:#101a2c;
+    --edge:#25324a; --edge2:#33425e;
+    --ink:#e8eefb; --muted:#93a3c0; --faint:#5f6f8e;
+    --signal:#2fbdd4; --signal-strong:#4fd3e6; --signal-soft:#0f3742; --signal-ring:rgba(47,189,212,.22);
+    --caution:#e0a94b; --caution-soft:#33280f; --caution-edge:#4a3a17;
+    --danger:#f26d6d; --danger-soft:#3a1919; --value:#4fd08a;
+    --tok-neg:#f2896b; --tok-str:#b699ee;
+    --sh-sm:0 1px 2px rgba(0,0,0,.3);
+    --sh-md:0 6px 22px rgba(0,0,0,.4);
+    --sh-top:0 -4px 18px rgba(0,0,0,.32);
+    --sh-head:0 3px 16px rgba(0,0,0,.34);
+    --sh-lg:0 12px 42px rgba(0,0,0,.5);
+  }
+  @media (prefers-color-scheme: dark){
+    :root[data-theme="auto"]{
+      color-scheme:dark;
+      --bg:#0b1220; --bg2:#0e1626; --surface:#141d30; --surface2:#1a2438; --inset:#101a2c;
+      --edge:#25324a; --edge2:#33425e;
+      --ink:#e8eefb; --muted:#93a3c0; --faint:#5f6f8e;
+      --signal:#2fbdd4; --signal-strong:#4fd3e6; --signal-soft:#0f3742; --signal-ring:rgba(47,189,212,.22);
+      --caution:#e0a94b; --caution-soft:#33280f; --caution-edge:#4a3a17;
+      --danger:#f26d6d; --danger-soft:#3a1919; --value:#4fd08a;
+      --tok-neg:#f2896b; --tok-str:#b699ee;
+      --sh-sm:0 1px 2px rgba(0,0,0,.3);
+      --sh-md:0 6px 22px rgba(0,0,0,.4);
+      --sh-top:0 -4px 18px rgba(0,0,0,.32);
+      --sh-head:0 3px 16px rgba(0,0,0,.34);
+      --sh-lg:0 12px 42px rgba(0,0,0,.5);
+    }
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%; margin:0}
+  body{
+    background:
+      radial-gradient(680px 320px at 92% -8%, var(--signal-ring), transparent 62%),
+      radial-gradient(520px 300px at -8% 104%, rgba(176,106,18,.05), transparent 60%),
+      var(--bg);
+    color:var(--ink); font-family:Inter,system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    display:flex; flex-direction:column; overscroll-behavior-y:none;
+    transition:background-color .25s, color .25s;
+  }
+  .mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,monospace}
+  .muted{color:var(--muted)} .faint{color:var(--faint)}
+  button{font-family:inherit}
+  :focus-visible{outline:2px solid var(--signal); outline-offset:2px; border-radius:6px}
+
+  .shell{width:100%; max-width:560px; margin:0 auto; flex:1 1 auto; display:flex; flex-direction:column; min-height:0}
+
+  /* ── pinned top ── */
+  header.top{
+    flex:0 0 auto; padding-top:var(--safe-t);
+    background:var(--surface); border-bottom:1px solid var(--edge);
+    box-shadow:var(--sh-head); position:relative; z-index:20;
+  }
+  .brandrow{display:flex; align-items:center; gap:.65rem; padding:.7rem 1rem .5rem}
+  .logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--signal-soft);border:1px solid var(--signal);flex:0 0 auto}
+  .iconbtn{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--surface2);border:1px solid var(--edge);color:var(--muted);cursor:pointer;flex:0 0 auto;transition:background-color .15s,color .15s}
+  .iconbtn:active{background:var(--inset)}
+  .iconbtn.on{color:var(--signal);border-color:var(--signal);background:var(--signal-soft)}
+
+  .readout-wrap{padding:0 1rem .7rem; position:relative}
+  #readout{
+    font-family:"JetBrains Mono",monospace; font-size:.9rem; line-height:1.65; word-break:break-word;
+    background:var(--inset); border:1px solid var(--edge); border-left:3px solid var(--signal);
+    border-radius:12px; padding:.8rem .9rem; min-height:56px; white-space:pre-wrap; color:var(--ink);
+    cursor:pointer; transition:border-color .15s,background-color .15s;
+  }
+  #readout:active{border-left-color:var(--signal-strong); background:var(--surface2)}
+  .copyhint{position:absolute; right:1.35rem; top:.35rem; font-size:.62rem; color:var(--faint); pointer-events:none; opacity:.9}
+  .metline{display:flex; align-items:center; gap:.5rem; padding:.2rem 1rem 0; font-size:.72rem}
+  .pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--signal);animation:pd 2.4s infinite;flex:0 0 auto}
+  @keyframes pd{0%{box-shadow:0 0 0 0 var(--signal-ring)}70%{box-shadow:0 0 0 7px rgba(13,139,160,0)}100%{box-shadow:0 0 0 0 rgba(13,139,160,0)}}
+  .enginepill{background:var(--surface2);border:1px solid var(--edge);border-radius:999px;color:var(--muted);font-family:"JetBrains Mono",monospace;font-size:.72rem;padding:.28rem .65rem;line-height:1;cursor:pointer}
+  .linkbtn{background:none;border:none;color:var(--faint);text-decoration:underline;text-decoration-style:dotted;cursor:pointer;font-size:.72rem;padding:0}
+
+  /* ── tabs ── */
+  .tabs{flex:0 0 auto; display:flex; gap:.2rem; margin:.55rem 1rem; padding:.25rem; background:var(--surface2); border:1px solid var(--edge); border-radius:13px; box-shadow:var(--sh-sm)}
+  .tab{flex:1; text-align:center; padding:.5rem .3rem; border-radius:9px; font-size:.78rem; font-weight:600; color:var(--muted); background:transparent; border:1px solid transparent; cursor:pointer; transition:all .15s; position:relative}
+  .tab[aria-selected="true"]{color:var(--signal); background:var(--surface); border-color:var(--edge); box-shadow:var(--sh-sm)}
+  .tab .badge{display:inline-block;min-width:16px;padding:0 4px;margin-left:3px;font-size:.6rem;line-height:16px;border-radius:8px;background:var(--signal-soft);color:var(--signal);vertical-align:middle}
+
+  /* ── scroll body ── */
+  main{flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:.2rem 1rem 1.6rem; min-height:0}
+  .scroll-thin::-webkit-scrollbar{width:7px}
+  .scroll-thin::-webkit-scrollbar-thumb{background:var(--edge2);border-radius:7px}
+  .pane{display:none} .pane.on{display:block; animation:fade .18s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* ── form ── */
+  .lbl{font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:.35rem;display:flex;gap:.4rem;align-items:center;flex-wrap:wrap}
+  .op{font-family:"JetBrains Mono",monospace;color:var(--signal);font-size:.72rem;background:var(--signal-soft);padding:.05rem .35rem;border-radius:5px}
+  .field{
+    background:var(--surface);border:1px solid var(--edge2);border-radius:11px;
+    padding:.72rem .82rem;width:100%;font-size:16px;color:var(--ink);
+    font-family:"JetBrains Mono",monospace;transition:border-color .15s,box-shadow .15s; box-shadow:var(--sh-sm);
+  }
+  .field::placeholder{color:var(--faint)}
+  .field:focus{outline:none;border-color:var(--signal);box-shadow:0 0 0 3px var(--signal-ring)}
+  select.field{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235b6b86' stroke-width='1.6'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .7rem center;padding-right:2rem}
+  .card{background:var(--surface);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--sh-sm)}
+  .sw{display:flex;align-items:center;gap:.6rem;font-size:.82rem;color:var(--muted);padding:.5rem 0;min-height:44px;cursor:pointer}
+  .sw input{width:20px;height:20px;accent-color:var(--signal)}
+  .chip{
+    border:1px solid var(--edge2);background:var(--surface);color:var(--muted);border-radius:999px;
+    padding:.5rem .85rem;font-size:.82rem;font-family:"JetBrains Mono",monospace;cursor:pointer;
+    min-height:40px;display:inline-flex;align-items:center;gap:.35rem;user-select:none;white-space:nowrap;transition:all .13s
+  }
+  .chip[aria-pressed="true"]{border-color:var(--signal);background:var(--signal-soft);color:var(--signal)}
+  .tagpill{font-size:.62rem;font-weight:600;color:var(--caution);background:var(--caution-soft);border:1px solid var(--caution-edge);border-radius:999px;padding:.08rem .45rem;margin-left:.1rem}
+  details.acc{border:1px solid var(--edge);border-radius:13px;background:var(--surface);overflow:hidden;margin-bottom:.7rem;box-shadow:var(--sh-sm)}
+  details.acc>summary{list-style:none;cursor:pointer;padding:.9rem 1rem;display:flex;align-items:center;gap:.6rem;font-weight:600;font-size:.9rem;min-height:52px}
+  details.acc>summary::-webkit-details-marker{display:none}
+  details.acc[open]>summary{border-bottom:1px solid var(--edge)}
+  details.acc .caret{margin-left:auto;transition:transform .2s;color:var(--faint)}
+  details.acc[open] .caret{transform:rotate(90deg)}
+  details.acc .body{padding:1rem;display:flex;flex-direction:column;gap:.85rem}
+  .summdot{width:8px;height:8px;border-radius:50%;background:var(--signal);flex:0 0 auto;opacity:0;transition:opacity .2s}
+  details.acc.filled .summdot{opacity:1}
+
+  .catcard{width:100%;text-align:left;border:1px solid var(--edge);background:var(--surface);border-radius:12px;padding:.9rem;cursor:pointer;min-height:64px;margin-bottom:.6rem;box-shadow:var(--sh-sm);transition:box-shadow .15s,transform .05s}
+  .catcard:active{box-shadow:var(--sh-md);transform:translateY(-1px)}
+  .librow{border:1px solid var(--edge);border-radius:12px;background:var(--surface);padding:.85rem;margin-bottom:.6rem;box-shadow:var(--sh-sm)}
+  .tok-op{color:var(--signal)}.tok-val{color:var(--value)}.tok-neg{color:var(--tok-neg)}.tok-str{color:var(--tok-str)}.tok-punc{color:var(--faint)}
+  code.tok-val,.librow code{background:var(--inset);border-radius:6px;padding:.15rem .35rem;display:inline-block;margin-top:.15rem}
+  .minibtn{border-radius:9px;padding:.5rem .75rem;font-size:.78rem;font-weight:600;background:var(--surface);border:1px solid var(--edge2);color:var(--ink);min-height:40px;display:inline-flex;align-items:center;gap:.35rem;box-shadow:var(--sh-sm);cursor:pointer}
+  .minibtn:active{background:var(--surface2)}
+  .minibtn.danger{color:var(--danger);border-color:var(--danger)}
+
+  .note{border:1px solid var(--caution-edge);background:var(--caution-soft);border-radius:12px;padding:.85rem;font-size:.78rem;line-height:1.55;box-shadow:var(--sh-sm)}
+  .note.info{border-color:var(--edge);background:var(--surface);color:var(--muted)}
+  .empty{text-align:center;padding:2.2rem 1rem;color:var(--faint)}
+  .empty svg{opacity:.5;margin-bottom:.6rem}
+  .seg{display:flex;gap:.35rem;flex-wrap:wrap}
+
+  /* ── bottom bar ── */
+  .actionbar{
+    flex:0 0 auto; padding:.6rem 1rem calc(.6rem + var(--safe-b));
+    background:var(--surface);border-top:1px solid var(--edge); box-shadow:var(--sh-top);
+    display:flex;gap:.5rem;align-items:center;position:relative;z-index:20;
+    width:100%;max-width:560px;margin:0 auto;
+  }
+  .abtn{flex:1;border-radius:12px;padding:.8rem;font-size:.9rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:50px;border:1px solid transparent;transition:filter .12s;cursor:pointer}
+  .abtn-primary{background:var(--signal);color:#fff;box-shadow:0 2px 10px var(--signal-ring)}
+  .abtn-primary:active{filter:brightness(.94)}
+  .abtn-ghost{background:var(--surface);border-color:var(--edge2);color:var(--ink);box-shadow:var(--sh-sm)}
+  .abtn-ghost:active{background:var(--surface2)}
+  .abtn:disabled{opacity:.45;box-shadow:none;cursor:not-allowed}
+
+  /* ── sheet ── */
+  .sheet-back{position:fixed;inset:0;background:rgba(6,12,24,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+  .sheet-back.on{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;left:0;right:0;bottom:0;transform:translateY(100%);transition:transform .25s cubic-bezier(.2,.8,.2,1);z-index:50;
+    width:100%;max-width:560px;margin:0 auto;
+    background:var(--surface);border-top:1px solid var(--edge);border-radius:20px 20px 0 0;padding:1rem 1.1rem calc(1.1rem + var(--safe-b));box-shadow:var(--sh-lg)}
+  .sheet.on{transform:translateY(0)}
+  .grip{width:40px;height:4px;border-radius:4px;background:var(--edge2);margin:0 auto .9rem}
+  .sheet-item{display:flex;align-items:center;gap:.75rem;width:100%;padding:.95rem .2rem;font-size:.95rem;color:var(--ink);border-bottom:1px solid var(--edge);background:none;border-left:none;border-right:none;border-top:none;cursor:pointer;text-align:left}
+  .sheet-item:last-child{border-bottom:none}
+  .sheet-title{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);padding:.2rem 0 .1rem}
+
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + var(--safe-b));background:var(--ink);color:var(--bg);padding:.62rem 1.05rem;border-radius:11px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;box-shadow:var(--sh-md);max-width:88%;text-align:center}
+  .toast.on{opacity:1}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+  a{color:var(--signal)}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brandrow">
+      <div class="logo">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
+      </div>
+      <div class="min-w-0" style="min-width:0">
+        <div style="font-weight:800;line-height:1.1">DorkForge</div>
+        <div class="faint" style="font-size:.7rem;line-height:1.2">Google dork builder · GHDB presets</div>
+      </div>
+      <button id="btn-theme" class="iconbtn" style="margin-left:auto" aria-label="Toggle theme" title="Theme">
+        <svg id="ico-theme" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg>
+      </button>
+    </div>
+    <div class="metline muted">
+      <span class="pulse-dot"></span>
+      <span id="partcount">Empty query</span>
+      <button id="engine-badge" class="enginepill" style="margin-left:auto" title="Switch engine">google</button>
+      <button id="toexplain" class="linkbtn">explain</button>
+    </div>
+    <div class="readout-wrap">
+      <div id="readout" role="textbox" tabindex="0" aria-label="Assembled query — tap to copy"></div>
+      <span class="copyhint">tap to copy</span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" aria-selected="true" data-pane="build">Build</button>
+    <button class="tab" role="tab" aria-selected="false" data-pane="presets">Presets</button>
+    <button class="tab" role="tab" aria-selected="false" data-pane="library">Library</button>
+    <button class="tab" role="tab" aria-selected="false" data-pane="saved">Saved<span class="badge hidden" id="savedbadge">0</span></button>
+  </nav>
+
+  <main class="scroll-thin">
+    <div id="warnbox" class="note hidden" style="margin-bottom:.8rem" role="alert"></div>
+
+    <!-- BUILD -->
+    <section class="pane on" data-pane="build">
+      <div class="note info" style="margin-bottom:.9rem;display:flex;gap:.6rem;align-items:flex-start">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--caution)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;margin-top:1px"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <span>Run exposure queries only on domains you <b>own or are authorized to test</b>. Findings are leads to remediate — not to access.</span>
+      </div>
+
+      <details class="acc" open data-group="scope">
+        <summary><span class="summdot"></span>Scope <svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="body">
+          <div>
+            <label class="lbl" for="f-site">Target domain <span class="op">site:</span></label>
+            <input id="f-site" class="field" placeholder="example.com" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="url" />
+          </div>
+          <label class="sw"><input id="f-subs" type="checkbox"> Include all subdomains <span class="op">site:*.… -www</span></label>
+        </div>
+      </details>
+
+      <details class="acc" open data-group="content">
+        <summary><span class="summdot"></span>Content &amp; keywords <svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="body">
+          <div>
+            <label class="lbl" for="f-intitle">Words in title <span class="op">intitle:</span></label>
+            <input id="f-intitle" class="field" placeholder="index of" autocomplete="off" spellcheck="false" />
+            <label class="sw"><input id="f-allintitle" type="checkbox"> require all <span class="op">allintitle:</span></label>
+          </div>
+          <div>
+            <label class="lbl" for="f-inurl">Words in URL <span class="op">inurl:</span></label>
+            <input id="f-inurl" class="field" placeholder="admin login" autocomplete="off" spellcheck="false" />
+            <label class="sw"><input id="f-allinurl" type="checkbox"> require all <span class="op">allinurl:</span></label>
+          </div>
+          <div>
+            <label class="lbl" for="f-intext">Words in page text <span class="op">intext:</span></label>
+            <input id="f-intext" class="field" placeholder="password" autocomplete="off" spellcheck="false" />
+          </div>
+          <div>
+            <label class="lbl" for="f-phrase">Exact phrase <span class="op">"…"</span></label>
+            <input id="f-phrase" class="field" placeholder="confidential" autocomplete="off" spellcheck="false" />
+          </div>
+          <div>
+            <label class="lbl" for="f-terms">Free keywords</label>
+            <input id="f-terms" class="field" placeholder="backup database" autocomplete="off" spellcheck="false" />
+          </div>
+          <div>
+            <label class="lbl">File types <span class="op">filetype:</span></label>
+            <div id="ftypes" class="seg"></div>
+            <input id="f-filetype-custom" class="field" style="margin-top:.5rem" placeholder="other: cfg, ini, yml" autocomplete="off" spellcheck="false" />
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" data-group="refine">
+        <summary><span class="summdot"></span>Refine &amp; exclude <svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="body">
+          <div>
+            <label class="lbl" for="f-exclude">Exclude terms <span class="op">-term</span></label>
+            <input id="f-exclude" class="field" placeholder="sample, template" autocomplete="off" spellcheck="false" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+            <div>
+              <label class="lbl" for="f-after">After <span class="op">after:</span></label>
+              <input id="f-after" type="date" class="field" />
+            </div>
+            <div>
+              <label class="lbl" for="f-before">Before <span class="op">before:</span></label>
+              <input id="f-before" type="date" class="field" />
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+            <div>
+              <label class="lbl" for="f-rlow">Range low <span class="op">n..n</span></label>
+              <input id="f-rlow" class="field" inputmode="numeric" placeholder="2020" autocomplete="off" />
+            </div>
+            <div>
+              <label class="lbl" for="f-rhigh">…high</label>
+              <input id="f-rhigh" class="field" inputmode="numeric" placeholder="2024" autocomplete="off" />
+            </div>
+          </div>
+          <div>
+            <label class="lbl" for="f-or">Either / or <span class="op">(a OR b)</span></label>
+            <input id="f-or" class="field" placeholder="login, signin, portal" autocomplete="off" spellcheck="false" />
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- PRESETS -->
+    <section class="pane" data-pane="presets">
+      <p class="muted" style="font-size:.78rem;margin:.2rem 0 .8rem">Load a common exposure pattern from the GHDB taxonomy, then add your <span class="op">site:</span> scope in Build.</p>
+      <div id="cats"></div>
+    </section>
+
+    <!-- LIBRARY -->
+    <section class="pane" data-pane="library">
+      <div style="position:relative;margin-bottom:.6rem">
+        <input id="lib-search" class="field" style="padding-left:2.3rem" placeholder="filter dorks…" autocomplete="off" spellcheck="false" />
+        <svg style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%)" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </div>
+      <div id="lib-tags" class="seg" style="margin-bottom:.7rem"></div>
+      <div id="library"></div>
+    </section>
+
+    <!-- SAVED -->
+    <section class="pane" data-pane="saved">
+      <div style="display:flex;gap:.5rem;margin-bottom:.8rem">
+        <button id="sub-hist" class="minibtn" style="flex:1;justify-content:center;color:var(--ink)">History</button>
+        <button id="sub-fav" class="minibtn muted" style="flex:1;justify-content:center">Saved</button>
+        <button id="btn-export" class="minibtn" title="Export as CSV">Export</button>
+        <button id="btn-wipe" class="minibtn danger" title="Clear this list" aria-label="Clear list">✕</button>
+      </div>
+      <div id="list-hist"></div>
+      <div id="list-fav" class="hidden"></div>
+    </section>
+  </main>
+</div>
+
+<div class="actionbar">
+  <button id="a-copy" class="abtn abtn-primary">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+    Copy
+  </button>
+  <button id="a-open" class="abtn abtn-ghost">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6"/></svg>
+    Search
+  </button>
+  <button id="a-more" class="abtn abtn-ghost" style="flex:0 0 auto;width:54px" aria-label="More actions">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>
+  </button>
+</div>
+
+<div id="sheet-back" class="sheet-back"></div>
+<div id="sheet" class="sheet" role="dialog" aria-label="Actions">
+  <div class="grip"></div>
+  <button class="sheet-item" data-act="save"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg> Save query</button>
+  <button class="sheet-item" data-act="share"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share link</button>
+  <div class="sheet-item" style="gap:.5rem;cursor:default">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+    <span class="muted" style="font-size:.9rem">Engine</span>
+    <div style="margin-left:auto;display:flex;gap:.4rem">
+      <button class="chip" data-engine="google" aria-pressed="true">Google</button>
+      <button class="chip" data-engine="bing" aria-pressed="false">Bing</button>
+      <button class="chip" data-engine="duckduckgo" aria-pressed="false">DDG</button>
+    </div>
+  </div>
+  <button class="sheet-item" data-act="clear" style="color:var(--danger)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg> Clear all fields</button>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+  const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  const haptic=ms=>{try{navigator.vibrate&&navigator.vibrate(ms||8);}catch(e){}};
+
+  const FILETYPES=["pdf","xlsx","xls","csv","docx","doc","txt","sql","log","env","bak","conf","xml","json","zip","git"];
+  const CATEGORIES=[
+    {name:"Sensitive documents",sensitive:true,desc:"Indexed office files with internal data",set:{filetype:["pdf","xlsx","docx"],intext:"confidential"}},
+    {name:"Directory listings",sensitive:true,desc:'Open "Index of" folders exposing files',set:{intitle:"index of",intext:"parent directory"}},
+    {name:"Login & admin pages",sensitive:false,desc:"Exposed sign-in and admin dashboards",set:{inurl:"admin login",intitle:"login"}},
+    {name:"Config & env files",sensitive:true,desc:"Public .env / .conf secrets",set:{filetype:["env","conf"],intext:"DB_PASSWORD"}},
+    {name:"Log files",sensitive:true,desc:"Server / app logs left readable",set:{filetype:["log"],intext:"error"}},
+    {name:"Database & backups",sensitive:true,desc:"SQL dumps and backup archives",set:{filetype:["sql","bak","zip"],intext:"INSERT INTO"}},
+    {name:"Error messages",sensitive:false,desc:"Stack traces leaking paths",set:{intext:"Warning: mysql_connect"}},
+    {name:"Exposed devices",sensitive:false,desc:"Camera / router / printer panels",set:{intitle:"webcamXP",inurl:"view/index.shtml"}},
+    {name:"Git & source exposure",sensitive:true,desc:"Public .git folders and source",set:{inurl:".git",intitle:"index of",intext:"config"}},
+    {name:"Credentials & keys",sensitive:true,desc:"Files that tend to carry secrets",set:{filetype:["env","json","xml"],intext:"api_key"}},
+    {name:"Personal data (PII)",sensitive:true,desc:"Lists / CVs / sheets with PII",set:{filetype:["xlsx","csv"],intext:"email phone"}},
+    {name:"Subdomain discovery",sensitive:false,desc:"Forgotten dev / staging hosts",set:{subs:true,exclude:"www"}},
+  ];
+  const LIBRARY=[
+    {t:"Open directory listings",q:'intitle:"index of" intext:"parent directory"',tag:"exposure"},
+    {t:"Exposed .env files",q:'filetype:env intext:"DB_PASSWORD"',tag:"secrets"},
+    {t:"SQL database dumps",q:'filetype:sql intext:"INSERT INTO"',tag:"database"},
+    {t:"Public backup archives",q:'intitle:"index of" (bak OR backup OR old) filetype:zip',tag:"backup"},
+    {t:"Admin login portals",q:'inurl:admin intitle:login',tag:"access"},
+    {t:"Exposed .git config",q:'inurl:".git/config" intext:"[core]"',tag:"source"},
+    {t:"phpinfo() pages",q:'intitle:"phpinfo()" intext:"PHP Version"',tag:"recon"},
+    {t:"Log files with errors",q:'filetype:log intext:"error" -sample',tag:"logs"},
+    {t:"WordPress config leaks",q:'intitle:"index of" "wp-config.php"',tag:"cms"},
+    {t:"Exposed Jenkins",q:'intitle:"Dashboard [Jenkins]"',tag:"devops"},
+    {t:"Open FTP indexes",q:'intitle:"index of" inurl:ftp',tag:"exposure"},
+    {t:"Sheets with emails",q:'filetype:xlsx intext:"@gmail.com" intext:phone',tag:"pii"},
+    {t:"API keys in JSON",q:'filetype:json intext:"api_key"',tag:"secrets"},
+    {t:"Config .ini files",q:'filetype:ini intext:"password"',tag:"config"},
+    {t:"Webcam viewers",q:'inurl:"view/index.shtml"',tag:"devices"},
+    {t:"MySQL error dumps",q:'intext:"You have an error in your SQL syntax"',tag:"errors"},
+    {t:"Confidential PDFs",q:'filetype:pdf intext:"confidential" -template',tag:"documents"},
+    {t:"Exposed .htpasswd",q:'filetype:htpasswd intext:":$apr1$"',tag:"secrets"},
+    {t:"Env backups (.env.bak)",q:'intitle:"index of" ".env.bak"',tag:"secrets"},
+    {t:"AWS keys in code",q:'intext:"AKIA" filetype:txt',tag:"secrets"},
+    {t:"Open Grafana dashboards",q:'inurl:"/d/" intitle:"Grafana"',tag:"devops"},
+    {t:"Exposed phpMyAdmin",q:'inurl:phpmyadmin intitle:"phpMyAdmin"',tag:"database"},
+    {t:"Swagger / OpenAPI docs",q:'inurl:"swagger-ui.html" OR inurl:"/api-docs"',tag:"api"},
+    {t:"Kibana consoles",q:'inurl:app/kibana intitle:Kibana',tag:"devops"},
+  ];
+
+  const F={};
+  ["site","subs","intitle","allintitle","inurl","allinurl","intext","phrase","terms","exclude","after","before","rlow","rhigh","or","filetype-custom"].forEach(k=>F[k]=$("#f-"+k));
+  let engine="google";
+  const activeTypes=new Set();
+
+  /* ── theme ── */
+  const SUN='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  const MOON='<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>';
+  const AUTO='<circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18" fill="currentColor" stroke="none"/>';
+  let theme=(()=>{try{return localStorage.getItem("dorkforge.theme")||"auto";}catch(e){return "auto";}})();
+  function applyTheme(){
+    document.documentElement.setAttribute("data-theme",theme);
+    $("#ico-theme").innerHTML=theme==="dark"?MOON:theme==="light"?SUN:AUTO;
+    $("#btn-theme").title="Theme: "+theme;
+  }
+  $("#btn-theme").onclick=()=>{theme=theme==="auto"?"light":theme==="light"?"dark":"auto";try{localStorage.setItem("dorkforge.theme",theme);}catch(e){}applyTheme();haptic();};
+  applyTheme();
+
+  function collectTypes(){
+    const custom=(F["filetype-custom"].value||"").split(",").map(s=>s.trim().replace(/^\./,"")).filter(Boolean);
+    return [...new Set([...activeTypes,...custom])];
+  }
+  function buildParts(){
+    const p=[]; const site=F.site.value.trim();
+    if(site){ if(F.subs.checked){p.push({raw:`site:*.${site}`});p.push({raw:`-site:www.${site}`});} else p.push({raw:`site:${site}`}); }
+    else if(F.subs.checked) p.push({raw:`site:*.example.com`});
+    const types=collectTypes();
+    if(types.length===1)p.push({raw:`filetype:${types[0]}`});
+    else if(types.length>1)p.push({raw:`(${types.map(t=>"filetype:"+t).join(" OR ")})`});
+    const it=F.intitle.value.trim();
+    if(it){ if(F.allintitle.checked)p.push({raw:`allintitle:${it}`}); else it.split(/\s+/).forEach(w=>p.push({raw:`intitle:${w}`})); }
+    const iu=F.inurl.value.trim();
+    if(iu){ if(F.allinurl.checked)p.push({raw:`allinurl:${iu}`}); else iu.split(/\s+/).forEach(w=>p.push({raw:`inurl:${w}`})); }
+    const ix=F.intext.value.trim();
+    if(ix) ix.split(/\s+/).forEach(w=>p.push({raw:`intext:${w}`}));
+    const ph=F.phrase.value.trim(); if(ph)p.push({raw:`"${ph}"`});
+    const terms=F.terms.value.trim(); if(terms)terms.split(/\s+/).forEach(w=>p.push({raw:w}));
+    const or=F.or.value.trim();
+    if(or){const a=or.split(",").map(s=>s.trim()).filter(Boolean); if(a.length>1)p.push({raw:`(${a.join(" OR ")})`}); else if(a.length===1)p.push({raw:a[0]});}
+    const lo=F.rlow.value.trim(),hi=F.rhigh.value.trim();
+    if(lo&&hi&&/^\d+$/.test(lo)&&/^\d+$/.test(hi))p.push({raw:`${lo}..${hi}`});
+    if(engine==="google"){ if(F.after.value)p.push({raw:`after:${F.after.value}`}); if(F.before.value)p.push({raw:`before:${F.before.value}`}); }
+    const ex=F.exclude.value.trim();
+    if(ex)ex.split(/[\s,]+/).map(s=>s.trim()).filter(Boolean).forEach(w=>p.push({raw:`-${w}`}));
+    return p;
+  }
+  const queryString=()=>buildParts().map(x=>x.raw).join(" ").trim();
+
+  function tokenize(raw){
+    if(raw.startsWith("-"))return `<span class="tok-neg">${esc(raw)}</span>`;
+    if(raw.startsWith('"'))return `<span class="tok-str">${esc(raw)}</span>`;
+    const m=raw.match(/^(all)?(site|filetype|intitle|inurl|intext|before|after):(.*)$/);
+    if(m)return `<span class="tok-op">${esc((m[1]||"")+m[2])}:</span><span class="tok-val">${esc(m[3])}</span>`;
+    if(/OR|\(|\)/.test(raw))return esc(raw).replace(/\bOR\b/g,'<span class="tok-op">OR</span>').replace(/(filetype:)([^\s)]+)/g,'<span class="tok-op">$1</span><span class="tok-val">$2</span>').replace(/[()]/g,c=>`<span class="tok-punc">${c}</span>`);
+    return `<span class="tok-val">${esc(raw)}</span>`;
+  }
+  function explainText(){
+    const s=[];const site=F.site.value.trim();
+    if(site&&F.subs.checked)s.push(`limited to subdomains of ${site} (excluding www)`);
+    else if(site)s.push(`limited to ${site}`);
+    const types=collectTypes(); if(types.length)s.push(`returning only ${types.map(t=>t.toUpperCase()).join(", ")} files`);
+    if(F.intitle.value.trim())s.push(`title contains “${F.intitle.value.trim()}”`);
+    if(F.inurl.value.trim())s.push(`“${F.inurl.value.trim()}” in the URL`);
+    if(F.intext.value.trim())s.push(`“${F.intext.value.trim()}” in the body`);
+    if(F.phrase.value.trim())s.push(`exact phrase “${F.phrase.value.trim()}”`);
+    const a=F.after.value,b=F.before.value; if(a||b)s.push(a&&b?`indexed ${a}–${b}`:a?`indexed after ${a}`:`indexed before ${b}`);
+    const ex=F.exclude.value.trim(); if(ex)s.push(`excluding ${ex.split(/[\s,]+/).filter(Boolean).map(w=>"“"+w+"”").join(", ")}`);
+    if(!s.length)return "Fill fields in Build and a plain-English breakdown appears here.";
+    return "Finds pages "+s.join(", ")+".";
+  }
+  function warnings(){
+    const w=[];const types=collectTypes();
+    if(F.allintitle.checked&&(F.inurl.value||F.intext.value||F.terms.value))w.push("<b>allintitle:</b> should be alone — Google ignores other operators beside it. Use plain <b>intitle:</b> instead.");
+    if(F.allinurl.checked&&(F.intitle.value||F.intext.value))w.push("<b>allinurl:</b> shouldn't be mixed with other operators either.");
+    if(F.allintitle.checked&&F.allinurl.checked)w.push("Can't combine <b>allintitle:</b> and <b>allinurl:</b> in one query.");
+    if(types.length>4)w.push("Many filetypes OR'd together dilute results — split per type.");
+    if((F.rlow.value||F.rhigh.value)&&!(/^\d+$/.test(F.rlow.value)&&/^\d+$/.test(F.rhigh.value)))w.push("Number range needs two whole numbers.");
+    if(F.rlow.value&&F.rhigh.value&&/^\d+$/.test(F.rlow.value)&&/^\d+$/.test(F.rhigh.value)&&(+F.rlow.value>+F.rhigh.value))w.push("Range low is greater than high — Google reads it left-to-right.");
+    if(F.after.value&&F.before.value&&F.after.value>F.before.value)w.push("<b>after:</b> is later than <b>before:</b> — the date window is empty.");
+    if((F.after.value||F.before.value)&&engine!=="google")w.push(`<b>before:</b>/<b>after:</b> are Google-only and were dropped from the ${engine} query.`);
+    const site=F.site.value.trim();
+    if(site&&!/^([a-z0-9-]+\.)+[a-z]{2,}$/i.test(site.replace(/^https?:\/\//,"").replace(/\/.*$/,"")))w.push("Target domain looks off — enter a bare host like <b>example.com</b> (no https://, no path).");
+    const sens=(F.intext.value+F.phrase.value+F.inurl.value).toLowerCase();
+    if(/password|secret|api_key|db_password|\.env|wp-config|\.sql|backup/.test(sens)&&!site)w.push("Sensitive dork with no <b>site:</b> scope — add your authorized domain first.");
+    return w;
+  }
+  function searchURL(q){const e=encodeURIComponent(q);return engine==="bing"?"https://www.bing.com/search?q="+e:engine==="duckduckgo"?"https://duckduckgo.com/?q="+e:"https://www.google.com/search?q="+e;}
+
+  function markFilled(){
+    $$("details.acc").forEach(d=>{
+      const g=d.dataset.group; let filled=false;
+      if(g==="scope")filled=!!F.site.value.trim()||F.subs.checked;
+      else if(g==="content")filled=!!(F.intitle.value||F.inurl.value||F.intext.value||F.phrase.value||F.terms.value||collectTypes().length);
+      else if(g==="refine")filled=!!(F.exclude.value||F.after.value||F.before.value||F.rlow.value||F.rhigh.value||F.or.value);
+      d.classList.toggle("filled",filled);
+    });
+  }
+
+  function render(){
+    const parts=buildParts(),q=parts.map(x=>x.raw).join(" ").trim();
+    $("#readout").innerHTML=parts.length?parts.map(x=>tokenize(x.raw)).join(" "):'<span class="faint">Your dork appears here as you build…</span>';
+    $("#engine-badge").textContent=engine;
+    $("#partcount").textContent=parts.length?`${parts.length} operator${parts.length>1?"s":""}`:"Empty query";
+    const w=warnings();
+    const wb=$("#warnbox");
+    wb.classList.toggle("hidden",!w.length);
+    wb.innerHTML=w.length?('<div style="font-weight:700;margin-bottom:.35rem;color:var(--caution)">Query notes</div>'+w.map(x=>`<div style="display:flex;gap:.4rem" class="muted"><span style="color:var(--caution)">▸</span><span>${x}</span></div>`).join("")):"";
+    const empty=!q;
+    $("#a-copy").disabled=empty;$("#a-open").disabled=empty;
+    markFilled();
+    return q;
+  }
+
+  function toggleType(t){activeTypes.has(t)?activeTypes.delete(t):activeTypes.add(t);drawTypes();render();haptic();}
+  function drawTypes(){const b=$("#ftypes");b.innerHTML="";FILETYPES.forEach(t=>{const c=el("button","chip");c.type="button";c.textContent=t;c.setAttribute("aria-pressed",activeTypes.has(t));c.onclick=()=>toggleType(t);b.appendChild(c);});}
+
+  function applyCategory(c){
+    ["intitle","inurl","intext","exclude"].forEach(k=>F[k].value="");
+    activeTypes.clear();F.allintitle.checked=F.allinurl.checked=F.subs.checked=false;
+    const s=c.set;
+    if(s.intitle)F.intitle.value=s.intitle; if(s.inurl)F.inurl.value=s.inurl; if(s.intext)F.intext.value=s.intext;
+    if(s.exclude)F.exclude.value=s.exclude; if(s.subs)F.subs.checked=true; if(s.filetype)s.filetype.forEach(t=>activeTypes.add(t));
+    drawTypes();render();switchPane("build");toast(`Loaded “${c.name}” — add site: scope`);haptic(12);
+  }
+  function drawCats(){const b=$("#cats");b.innerHTML="";CATEGORIES.forEach(c=>{const x=el("button","catcard");x.type="button";
+    x.style.borderLeft="3px solid "+(c.sensitive?'var(--caution)':'var(--signal)');
+    x.innerHTML=`<div style="display:flex;align-items:center;gap:.5rem"><span style="font-weight:600;font-size:.88rem">${esc(c.name)}</span>${c.sensitive?'<span class="tagpill">sensitive</span>':''}</div><div class="muted" style="font-size:.75rem;margin-top:.25rem;line-height:1.4">${esc(c.desc)}</div>`;
+    x.onclick=()=>applyCategory(c);b.appendChild(x);});}
+
+  let libFilter="", libTag="";
+  function drawLibTags(){
+    const tags=[...new Set(LIBRARY.map(d=>d.tag))].sort();
+    const b=$("#lib-tags");b.innerHTML="";
+    const mk=(label,val)=>{const c=el("button","chip");c.type="button";c.textContent=label;c.setAttribute("aria-pressed",libTag===val);c.onclick=()=>{libTag=libTag===val?"":val;drawLibTags();drawLibrary();};return c;};
+    b.appendChild(mk("all",""));tags.forEach(t=>b.appendChild(mk(t,t)));
+  }
+  function drawLibrary(){const b=$("#library");b.innerHTML="";const q=libFilter.toLowerCase();
+    const rows=LIBRARY.filter(d=>(!q||(d.t+d.q+d.tag).toLowerCase().includes(q))&&(!libTag||d.tag===libTag));
+    if(!rows.length){b.innerHTML='<div class="empty"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><div>No dorks match.</div></div>';return;}
+    rows.forEach(d=>{const r=el("div","librow");
+      r.innerHTML=`<div style="font-size:.88rem;font-weight:500">${esc(d.t)}</div><code class="mono" style="font-size:.75rem;word-break:break-all">${esc(d.q)}</code>
+        <div style="display:flex;gap:.4rem;margin-top:.5rem"><button class="minibtn" data-a="use">Load</button><button class="minibtn" data-a="copy">Copy</button><span class="chip" style="margin-left:auto;pointer-events:none">${esc(d.tag)}</span></div>`;
+      r.querySelector('[data-a="use"]').onclick=()=>loadRaw(d.q);
+      r.querySelector('[data-a="copy"]').onclick=()=>copy(d.q);
+      b.appendChild(r);});}
+
+  function appendCustomType(t){const cur=F["filetype-custom"].value.split(",").map(s=>s.trim()).filter(Boolean);if(!cur.includes(t)){cur.push(t);F["filetype-custom"].value=cur.join(", ");}}
+  function loadRaw(raw){
+    clearAll(true);const leftover=[];
+    (raw.match(/(?:[^\s"()]+|"[^"]*"|\([^)]*\))+/g)||[]).forEach(tok=>{let m;
+      if((m=tok.match(/^site:\*\.(.+)$/))){F.site.value=m[1];F.subs.checked=true;}
+      else if((m=tok.match(/^site:(.+)$/)))F.site.value=m[1];
+      else if((m=tok.match(/^filetype:(.+)$/))){FILETYPES.includes(m[1])?activeTypes.add(m[1]):appendCustomType(m[1]);}
+      else if((m=tok.match(/^allintitle:(.+)$/))){F.intitle.value=m[1];F.allintitle.checked=true;}
+      else if((m=tok.match(/^intitle:(.+)$/)))F.intitle.value=(F.intitle.value+" "+m[1]).trim();
+      else if((m=tok.match(/^allinurl:(.+)$/))){F.inurl.value=m[1];F.allinurl.checked=true;}
+      else if((m=tok.match(/^inurl:(.+)$/)))F.inurl.value=(F.inurl.value+" "+m[1]).trim();
+      else if((m=tok.match(/^intext:(.+)$/)))F.intext.value=(F.intext.value+" "+m[1].replace(/"/g,"")).trim();
+      else if((m=tok.match(/^after:(.+)$/)))F.after.value=m[1];
+      else if((m=tok.match(/^before:(.+)$/)))F.before.value=m[1];
+      else if(tok.startsWith("-"))F.exclude.value=(F.exclude.value+" "+tok.slice(1)).trim();
+      else if(/^".*"$/.test(tok))F.phrase.value=tok.slice(1,-1);
+      else if(!/^\(.*\)$/.test(tok))leftover.push(tok);
+    });
+    if(leftover.length)F.terms.value=leftover.join(" ");
+    drawTypes();render();switchPane("build");toast("Loaded into Build");haptic(12);
+  }
+  function clearAll(silent){Object.values(F).forEach(i=>{if(i.type==="checkbox")i.checked=false;else i.value="";});activeTypes.clear();drawTypes();render();if(!silent){toast("Cleared");haptic();}}
+
+  /* ── clipboard + toast ── */
+  let tT;
+  function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tT);tT=setTimeout(()=>t.classList.remove("on"),1900);}
+  function copy(text){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>{toast("Copied");haptic();}).catch(()=>fb(text));else fb(text);}
+  function fb(text){const ta=el("textarea");ta.value=text;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast("Copied");}catch(e){toast("Copy failed");}ta.remove();}
+  async function share(){
+    const q=queryString();if(!q){toast("Nothing to share");return;}
+    const url=location.origin+location.pathname+"#q="+encodeURIComponent(q)+"&e="+engine;
+    if(navigator.share){try{await navigator.share({title:"DorkForge query",text:q,url});return;}catch(e){if(e&&e.name==="AbortError")return;}}
+    copy(url);toast("Share link copied");
+  }
+
+  /* ── storage ── */
+  const HKEY="dorkforge.m.hist",FKEY="dorkforge.m.fav";
+  const load=k=>{try{return JSON.parse(localStorage.getItem(k))||[];}catch(e){return [];}};
+  const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v.slice(0,80)));}catch(e){}};
+  let history=load(HKEY),favs=load(FKEY);
+  function updateSavedBadge(){const n=favs.length;const b=$("#savedbadge");b.textContent=n;b.classList.toggle("hidden",!n);}
+  function pushHistory(q){if(!q)return;history=history.filter(x=>x!==q);history.unshift(q);save(HKEY,history);drawHistory();}
+  function addFav(q){if(!q){toast("Nothing to save");return;}if(!favs.includes(q)){favs.unshift(q);save(FKEY,favs);drawFavs();updateSavedBadge();toast("Saved");haptic(12);}else toast("Already saved");}
+  function rowFor(q,onDel){const r=el("div","librow");
+    r.innerHTML=`<code class="mono" style="font-size:.75rem;word-break:break-all">${esc(q)}</code><div style="display:flex;gap:.4rem;margin-top:.5rem"><button class="minibtn" data-a="load">Load</button><button class="minibtn" data-a="copy">Copy</button><button class="minibtn danger" style="margin-left:auto" data-a="del" aria-label="Delete">✕</button></div>`;
+    r.querySelector('[data-a="load"]').onclick=()=>loadRaw(q);
+    r.querySelector('[data-a="copy"]').onclick=()=>copy(q);
+    r.querySelector('[data-a="del"]').onclick=onDel;return r;}
+  function emptyState(msg){return `<div class="empty"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h10"/></svg><div>${esc(msg)}</div></div>`;}
+  function drawHistory(){const b=$("#list-hist");b.innerHTML="";if(!history.length){b.innerHTML=emptyState("Queries you copy or search are logged here.");return;}history.forEach((q,i)=>b.appendChild(rowFor(q,()=>{history.splice(i,1);save(HKEY,history);drawHistory();})));}
+  function drawFavs(){const b=$("#list-fav");b.innerHTML="";if(!favs.length){b.innerHTML=emptyState("Save a query from the ⋯ menu to keep it here.");return;}favs.forEach((q,i)=>b.appendChild(rowFor(q,()=>{favs.splice(i,1);save(FKEY,favs);drawFavs();updateSavedBadge();})));}
+
+  async function exportList(){
+    const showingFav=!$("#list-fav").classList.contains("hidden");
+    const set=showingFav?favs:history, which=showingFav?"saved":"history";
+    if(!set.length){toast("Nothing to export");return;}
+    const csv="dork\n"+set.map(q=>'"'+q.replace(/"/g,'""')+'"').join("\n");
+    try{const dl=window.claude&&await claude.use("downloads");if(dl){await dl.save({filename:`dorkforge-${which}.csv`,data:csv});return;}}catch(e){}
+    try{
+      const blob=new Blob([csv],{type:"text/csv"});const a=el("a");a.href=URL.createObjectURL(blob);a.download=`dorkforge-${which}.csv`;
+      document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast("Exported CSV");return;
+    }catch(e){}
+    copy(csv);toast("Export unavailable — copied as CSV");
+  }
+
+  /* ── panes ── */
+  function switchPane(name){
+    $$(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.pane===name));
+    $$(".pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===name));
+    $("main").scrollTop=0;
+  }
+  $$(".tab").forEach(t=>t.onclick=()=>switchPane(t.dataset.pane));
+
+  /* ── sheet ── */
+  const sheet=$("#sheet"),back=$("#sheet-back");
+  const openSheet=()=>{sheet.classList.add("on");back.classList.add("on");};
+  const closeSheet=()=>{sheet.classList.remove("on");back.classList.remove("on");};
+  $("#a-more").onclick=openSheet; back.onclick=closeSheet;
+  $$('.sheet-item[data-act]').forEach(b=>b.onclick=()=>{const a=b.dataset.act;closeSheet();if(a==="save")addFav(queryString());else if(a==="clear")clearAll(false);else if(a==="share")share();});
+  function setEngine(e){engine=e;$$('[data-engine]').forEach(x=>x.setAttribute("aria-pressed",x.dataset.engine===e));render();}
+  $$('#sheet [data-engine]').forEach(b=>b.onclick=()=>{setEngine(b.dataset.engine);haptic();});
+  $("#engine-badge").onclick=()=>{setEngine(engine==="google"?"bing":engine==="bing"?"duckduckgo":"google");haptic();};
+
+  /* ── wiring ── */
+  Object.values(F).forEach(i=>{i.addEventListener("input",render);i.addEventListener("change",render);});
+  $("#a-copy").onclick=()=>{const q=queryString();if(q){copy(q);pushHistory(q);}};
+  $("#a-open").onclick=()=>{const q=queryString();if(q){pushHistory(q);window.open(searchURL(q),"_blank","noopener");}};
+  $("#btn-export").onclick=exportList;
+  $("#btn-wipe").onclick=()=>{const showingFav=!$("#list-fav").classList.contains("hidden");
+    if(showingFav){if(!favs.length){toast("Already empty");return;}favs=[];save(FKEY,favs);drawFavs();updateSavedBadge();}
+    else{if(!history.length){toast("Already empty");return;}history=[];save(HKEY,history);drawHistory();}
+    toast("List cleared");};
+  $("#lib-search").addEventListener("input",e=>{libFilter=e.target.value;drawLibrary();});
+  $("#toexplain").onclick=()=>toast(explainText());
+  $("#readout").onclick=()=>{const q=queryString();if(q){copy(q);pushHistory(q);}else toast("Nothing to copy yet");};
+  $("#readout").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("#readout").click();}});
+  $("#sub-hist").onclick=()=>{$("#list-hist").classList.remove("hidden");$("#list-fav").classList.add("hidden");$("#sub-hist").style.color="var(--ink)";$("#sub-fav").style.color="var(--muted)";};
+  $("#sub-fav").onclick=()=>{$("#list-fav").classList.remove("hidden");$("#list-hist").classList.add("hidden");$("#sub-fav").style.color="var(--ink)";$("#sub-hist").style.color="var(--muted)";};
+
+  /* keyboard shortcuts (physical keyboards) */
+  document.addEventListener("keydown",e=>{
+    if(e.target.matches("input,textarea"))return;
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="enter"){const q=queryString();if(q){copy(q);pushHistory(q);}}
+    else if(e.key==="Escape")closeSheet();
+  });
+
+  /* deep-link: #q=…&e=engine */
+  (function initFromHash(){
+    if(!location.hash)return;
+    const p=new URLSearchParams(location.hash.slice(1));
+    const q=p.get("q");if(q){if(p.get("e"))setEngine(p.get("e"));loadRaw(q);}
+  })();
+
+  drawTypes();drawCats();drawLibTags();drawLibrary();drawHistory();drawFavs();updateSavedBadge();render();
+})();
+</script>
+</body>
+  </html>
