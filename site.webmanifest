@@ -1,0 +1,20 @@
+{
+  "name": "DorkForge — Google Dork Builder",
+  "short_name": "DorkForge",
+  "description": "Build precise Google, Bing and DuckDuckGo dork queries with GHDB presets for authorized security testing and attack-surface review.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1220",
+  "theme_color": "#0d8ba0",
+  "lang": "en",
+  "categories": ["security", "developer", "utilities", "productivity"],
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
