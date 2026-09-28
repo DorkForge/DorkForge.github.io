@@ -50,6 +50,7 @@ No sign‑up, no backend, no tracking. Runs entirely in your browser.
 | 💾 **History & saved queries** | Every copied or searched query is logged. Bookmark favourites and export either list as **CSV**. All of it stays in `localStorage`. |
 | 🔗 **Shareable deep links** | Share a query as a URL (`#q=…&e=bing`) using the native share sheet, or copy the link. |
 | 📱 **Mobile‑first PWA** | Thumb‑reach action bar, bottom sheet, haptics, safe‑area aware. Installable to the home screen. |
+| 🖥️ **Desktop workspace** | On wide screens the query, actions and a live plain‑English explanation sit in a side panel next to a two‑column builder, preset grid and library grid. |
 | 🌗 **Light · Dark · Auto** | Follows your OS by default. Your choice is remembered. |
 | ⌨️ **Keyboard friendly** | <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd> copies the query, <kbd>Esc</kbd> closes the sheet, and the query box works with <kbd>Enter</kbd>/<kbd>Space</kbd>. |
 
